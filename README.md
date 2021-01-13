@@ -1,6 +1,6 @@
 # What
 
-This is a silly little shell script that I took 5 minutes to write in order to automate the gathering of foreign networks that I attach to via my laptop.
+This is a silly little shell script that I took 5 minutes to write in order to automate the gathering of information on foreign networks that I attach to via my laptop.  The script runs a few traceroutes, looks up the source IP, DNS querier IP, etc.  It's as basic as you get.
 
 ## OS Support
 
