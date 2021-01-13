@@ -1,0 +1,106 @@
+#!/bin/sh
+# Scans for life forms
+# Mark Kamichoff <prox@prolixium.com>
+# Version 0.1
+
+MYOUTPUT=lifeforms_$(date +%s)_$$.txt
+
+nicebanner () {
+	echo "----------------------------------------------------------------"
+	echo "$1"
+	echo "----------------------------------------------------------------"
+	echo
+}
+
+# runs UDP and ICMP
+runmtr4 () {
+	echo "runmtr4 $1: BEGIN" 1>&2
+	MTRCMD="mtr -4 --report --report-cycles=4 -i 2 -u -P 33434 $1"
+	nicebanner "${MTRCMD}"
+	$MTRCMD
+	echo
+	MTRCMD="mtr -4 --report --report-cycles=4 -i 2 $1"
+	nicebanner "${MTRCMD}"
+	$MTRCMD
+	echo
+	echo "runmtr4 $1: END" 1>&2
+}
+
+runmtr6 () {
+	echo "runmtr6 $1: BEGIN" 1>&2
+	MTRCMD="mtr -6 --report --report-cycles=4 -i 2 $1"
+	nicebanner "${MTRCMD}"
+	$MTRCMD
+	echo
+	echo "runmtr6 $1: END" 1>&2
+}
+
+myip () {
+	echo "myip: BEGIN" 1>&2
+	nicebanner "Egress IP Information"
+
+	v4=$(curl -s -4 http://ifconfig.io/)
+	v6=$(curl -s -6 http://ifconfig.io/)
+
+	echo "Egress IPv4 Address: $v4"
+	ipin $v4
+	echo
+
+	echo "Egress IPv6 Address: $v6"
+	ipin $v6
+	echo
+
+	echo "myip: END" 1>&2
+}
+
+sysinfo () {
+	echo "sysinfo: BEGIN" 1>&2
+	nicebanner "System Information"
+
+	# IPv4 only
+	# XXX add conditions for iproute2 on Linux
+	arp -na
+	echo
+	netstat -rn
+	echo
+
+	ifconfig -a
+	cat /etc/resolv.conf
+	echo
+	echo "sysinfo: END" 1>&2
+}
+
+dnsegress () {
+	echo "dnsegress: BEGIN" 1>&2
+	nicebanner "Egress DNS Server Address"
+	host whoami.akamai.net.
+	echo
+	echo "dnsegress: END" 1>&2
+}
+
+sysinfo > "${MYOUTPUT}_sysinfo" &
+myip > "${MYOUTPUT}_myip" &
+dnsegress > "${MYOUTPUT}_dnsegress" &
+
+# IPv4
+for i in google.com. 1.1.1.1 dax.prolixium.com.; do
+	runmtr4 $i > "${MYOUTPUT}_runmtr4_$i" &
+done
+
+# IPv6
+for i in google.com. sprint.net. anycast.prolixium.com. chime.aws.; do
+	runmtr6 $i > "${MYOUTPUT}_runmtr6_$i" &
+done
+
+wait
+
+echo -n "All jobs finished.  Concatenating: "
+cat ${MYOUTPUT}_* > ${MYOUTPUT}
+echo "done."
+
+echo -n "Cleaning up temporary files: "
+rm -f ${MYOUTPUT}_*
+echo "done."
+
+echo "Run complete.  File name is ${MYOUTPUT}."
+cat ${MYOUTPUT}
