@@ -1,7 +1,6 @@
 #!/bin/sh
 # Scans for life forms
 # Mark Kamichoff <prox@prolixium.com>
-# Version 0.1
 
 MYOUTPUT=lifeforms_$(date +%s)_$$.txt
 
@@ -15,11 +14,11 @@ nicebanner () {
 # runs UDP and ICMP
 runmtr4 () {
 	echo "runmtr4 $1: BEGIN" 1>&2
-	MTRCMD="mtr -4 --report --report-cycles=4 -i 2 -u -P 33434 $1"
+	MTRCMD="mtr -4 --report --report-wide --report-cycles=4 -i 2 -u -P 33434 $1"
 	nicebanner "${MTRCMD}"
 	$MTRCMD
 	echo
-	MTRCMD="mtr -4 --report --report-cycles=4 -i 2 $1"
+	MTRCMD="mtr -4 --report --report-wide --report-cycles=4 -i 2 $1"
 	nicebanner "${MTRCMD}"
 	$MTRCMD
 	echo
@@ -28,7 +27,7 @@ runmtr4 () {
 
 runmtr6 () {
 	echo "runmtr6 $1: BEGIN" 1>&2
-	MTRCMD="mtr -6 --report --report-cycles=4 -i 2 $1"
+	MTRCMD="mtr -6 --report --report-wide --report-cycles=4 -i 2 $1"
 	nicebanner "${MTRCMD}"
 	$MTRCMD
 	echo
@@ -57,13 +56,29 @@ sysinfo () {
 	echo "sysinfo: BEGIN" 1>&2
 	nicebanner "System Information"
 
-	# IPv4 only
-	# XXX add conditions for iproute2 on Linux
-	arp -na
-	echo
+	# Neighbors
+	if [ $(uname) == "Linux" ]
+	then
+		ip -4 nei show
+		echo
+		ip -6 nei show
+		echo
+	elif [ $(uname) == "Darwin" ]
+	then
+		arp -na
+		echo
+		ndp -na
+		echo
+	else
+		arp -na
+		echo
+	fi
+
+	# Routes
 	netstat -rn
 	echo
 
+	# Addresses
 	ifconfig -a
 	cat /etc/resolv.conf
 	echo
