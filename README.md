@@ -4,7 +4,7 @@ This is a silly little shell script that I took 5 minutes to write in order to a
 
 ## OS Support
 
-It's tested on Linux and macOS.  It might work with other Unix-based operating systems and might work under WSL.
+It's tested on Linux and macOS.  It might work with other Unix-based operating systems and might work under WSL, but probably not.
 
 ## Requirements
 
