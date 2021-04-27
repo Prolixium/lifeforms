@@ -3,6 +3,7 @@
 # Mark Kamichoff <prox@prolixium.com>
 
 MYOUTPUT=lifeforms_$(date +%s)_$$.txt
+AIRPORT=/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport
 
 nicebanner () {
 	echo "----------------------------------------------------------------"
@@ -81,6 +82,15 @@ sysinfo () {
 	# Addresses
 	ifconfig -a
 	cat /etc/resolv.conf
+	echo
+
+	# Wi-Fi
+	if [ $(uname) == "Darwin" ]
+	then
+		$AIRPORT -I
+	fi
+
+	# End
 	echo
 	echo "sysinfo: END" 1>&2
 }
